@@ -5,12 +5,14 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.PointF
-import androidx.annotation.DimenRes
-import androidx.annotation.FloatRange
-import androidx.core.content.ContextCompat
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.DimenRes
+import androidx.annotation.FloatRange
+import androidx.core.content.ContextCompat
+
+typealias OnSeekBarTouchListener = () -> Unit
 
 class GaugeSeekBar : View {
 
@@ -51,6 +53,8 @@ class GaugeSeekBar : View {
     var interactive: Boolean = true
 
     var progressChangedCallback: (progress: Float) -> Unit = {}
+
+    private var onTouchListener: OnSeekBarTouchListener? = null
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -152,12 +156,17 @@ class GaugeSeekBar : View {
      */
     fun getProgress() = progress
 
+    fun setTouchListener(listener: OnSeekBarTouchListener) {
+        this.onTouchListener = listener
+    }
+
     private fun applyAttributes(attributes: TypedArray) {
         try {
             startAngle = attributes.getFloat(R.styleable.GaugeSeekBar_startAngleDegrees, startAngle)
             thumbRadius = attributes.getDimension(R.styleable.GaugeSeekBar_thumbRadius, thumbRadius)
             thumbColor = attributes.getColor(R.styleable.GaugeSeekBar_thumbColor, thumbColor)
-            val trackGradientArrayId = attributes.getResourceId(R.styleable.GaugeSeekBar_trackGradient, 0)
+            val trackGradientArrayId =
+                attributes.getResourceId(R.styleable.GaugeSeekBar_trackGradient, 0)
             if (trackGradientArrayId != 0) {
                 trackGradientArray = resources.getIntArray(trackGradientArrayId)
             }
@@ -200,6 +209,7 @@ class GaugeSeekBar : View {
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean =
             if (interactive) {
+                onTouchListener?.invoke()
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         performClick()
